@@ -27,6 +27,8 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 
+uint32_t previous_row_colors[8];
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -40,23 +42,39 @@ void setup() {
   strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
   strip.show();            // Turn OFF all pixels ASAP
   strip.setBrightness(BRIGHTNESS); // Set BRIGHTNESS to about 1/5 (max = 255)
+
+
 }
 
 int red, blue;
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //for (int i = 0; i < strip.numPixels(); i++) {
-  //    red = 255 - i * 4;
-  //    blue = i * 4;
-  strip.setPixelColor(0, strip.Color(255, 0,   0));
 
-  strip.setPixelColor(1, strip.Color(255, 255,   255));
-  strip.setPixelColor(2, strip.Color(0, 0, 255));
-  strip.setPixelColor(8, strip.Color(0, 255,   0));
-  //     strip.setPixelColor(32, strip.Color(0, 0,   0, 255));
-  strip.show();
-  delay(50);
-  // }
+  introduce_bottom_row(strip.Color(random(0, 255), random(0, 255), random(0, 255)));
   delay(1000);
+
+}
+
+void introduce_bottom_row(uint32_t color) {
+  // carry upwards the rows
+  for (int i = 0; i < 7; i++) {
+    paint_row_single_color(previous_row_colors[i + 1], i);
+    previous_row_colors[i] = previous_row_colors[i + 1];
+  }
+  // paint the last row
+  paint_row_single_color(color, 7);
+  previous_row_colors[7] = color;
+
+}
+
+
+void paint_row_single_color(uint32_t color, int row) {
+  int first_pixel = 8 * row;
+
+  for (int i = first_pixel; i < first_pixel + 8; i++) {
+    strip.setPixelColor(i, color);
+  }
+  strip.show();
+
 }
